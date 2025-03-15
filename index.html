@@ -12,12 +12,12 @@
             try {
                 device = await navigator.bluetooth.requestDevice({
                     acceptAllDevices: true,
-                    optionalServices: ['ffe0'] // JDY-23 service UUID
+                    optionalServices: ['0000ffe0-0000-1000-8000-00805f9b34fb'] // JDY-23 full UUID
                 });
 
                 const server = await device.gatt.connect();
-                const service = await server.getPrimaryService('ffe0');
-                characteristic = await service.getCharacteristic('ffe1');
+                const service = await server.getPrimaryService('0000ffe0-0000-1000-8000-00805f9b34fb');
+                characteristic = await service.getCharacteristic('0000ffe1-0000-1000-8000-00805f9b34fb');
                 alert("Connected to RC Car!");
             } catch (error) {
                 alert("Bluetooth connection failed: " + error);
