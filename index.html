@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RC Car Joystick</title>
+    <script>
+        let device;
+        let characteristic;
+
+        async function connectBluetooth() {
+            try {
+                device = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: ['ffe0'] // JDY-23 service UUID
+                });
+
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService('ffe0');
+                characteristic = await service.getCharacteristic('ffe1');
+                alert("Connected to RC Car!");
+            } catch (error) {
+                alert("Bluetooth connection failed: " + error);
+            }
+        }
+
+        function sendCommand(command) {
+            if (!characteristic) {
+                alert("Not connected to Bluetooth!");
+                return;
+            }
+            const data = new TextEncoder().encode(command);
+            characteristic.writeValue(data);
+        }
+
+        function setupJoystick() {
+            const joystick = document.getElementById("joystick");
+            joystick.addEventListener("touchstart", handleTouchStart);
+            joystick.addEventListener("touchmove", handleTouchMove);
+            joystick.addEventListener("touchend", handleTouchEnd);
+        }
+
+        let touchStartX, touchStartY;
+        function handleTouchStart(event) {
+            const touch = event.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+        }
+
+        function handleTouchMove(event) {
+            const touch = event.touches[0];
+            const dx = touch.clientX - touchStartX;
+            const dy = touch.clientY - touchStartY;
+            
+            if (Math.abs(dx) > Math.abs(dy)) {
+                sendCommand(dx > 0 ? 'R' : 'L'); // Right or Left
+            } else {
+                sendCommand(dy > 0 ? 'B' : 'F'); // Forward or Backward
+            }
+        }
+
+        function handleTouchEnd() {
+            sendCommand('S'); // Stop when touch ends
+        }
+    </script>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; }
+        button { font-size: 20px; padding: 10px; margin: 10px; }
+        #joystick { width: 150px; height: 150px; background: lightgray; border-radius: 50%; display: inline-block; margin-top: 20px; }
+    </style>
+</head>
+<body onload="setupJoystick()">
+    <h1>RC Car Joystick</h1>
+    <button onclick="connectBluetooth()">Connect to Bluetooth</button>
+    <div id="joystick">Touch Here</div>
+</body>
+</html>
