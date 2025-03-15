@@ -10,14 +10,23 @@
 
         async function connectBluetooth() {
             try {
+                console.log("Scanning for Bluetooth devices...");
                 device = await navigator.bluetooth.requestDevice({
-                    acceptAllDevices: true,
-                    optionalServices: ['0000ffe0-0000-1000-8000-00805f9b34fb'] // JDY-23 full UUID
+                    acceptAllDevices: true // Removed UUID filter
                 });
+                console.log("Device selected:", device.name);
 
                 const server = await device.gatt.connect();
-                const service = await server.getPrimaryService('0000ffe0-0000-1000-8000-00805f9b34fb');
-                characteristic = await service.getCharacteristic('0000ffe1-0000-1000-8000-00805f9b34fb');
+                console.log("Connected to GATT server");
+
+                const services = await server.getPrimaryServices();
+                console.log("Available Services:", services.map(s => s.uuid));
+
+                // Attempt to use the first available service
+                const service = services[0];
+                const characteristics = await service.getCharacteristics();
+                characteristic = characteristics[0];
+
                 alert("Connected to RC Car!");
             } catch (error) {
                 alert("Bluetooth connection failed: " + error);
